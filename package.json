@@ -1,0 +1,46 @@
+{
+  "name": "springline",
+  "version": "0.1.0",
+  "description": "Spring easing as a CSS linear() string. Tune stiffness, damping, mass or duration and bounce; ship no runtime.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Daniel Belyi",
+  "repository": "github:Danilaa1/springline",
+  "keywords": [
+    "spring",
+    "easing",
+    "linear",
+    "css",
+    "animation",
+    "motion",
+    "physics"
+  ],
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    ".github/agent.md",
+    "LICENSE"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./agent.md": "./.github/agent.md"
+  },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "pack:check": "npm pack --dry-run",
+    "test": "vitest run",
+    "assets": "node --experimental-strip-types scripts/assets.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

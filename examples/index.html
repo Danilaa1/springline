@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>springline example</title>
+    <style>
+      :root {
+        --ink: #18181b;
+        --dim: #a1a1aa;
+        --faint: #e4e4e7;
+        --accent: #15803d;
+      }
+      body {
+        font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--ink);
+        max-width: 560px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 18ch 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--faint);
+      }
+      .rail {
+        position: relative;
+        height: 16px;
+      }
+      .ball {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        top: 3px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      button {
+        font: inherit;
+        margin-top: 14px;
+      }
+      pre {
+        white-space: pre-wrap;
+        color: var(--dim);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="rows"></div>
+    <button id="run" type="button">run</button>
+    <pre id="out"></pre>
+    <script type="module">
+      import { spring, presets } from "../dist/index.js";
+
+      const cases = {
+        ...Object.fromEntries(Object.entries(presets).map(([n, p]) => [n, spring(p)])),
+        "duration .4 bounce .3": spring({ duration: 0.4, bounce: 0.3 }),
+        "snappy · velocity −20": spring({ ...presets.snappy, velocity: -20 }),
+      };
+
+      const rows = document.getElementById("rows");
+      for (const name of Object.keys(cases)) {
+        rows.insertAdjacentHTML(
+          "beforeend",
+          `<div class="row"><span>${name}</span><div class="rail"><div class="ball" data-name="${name}"></div></div></div>`,
+        );
+      }
+
+      document.getElementById("run").addEventListener("click", () => {
+        document.querySelectorAll(".ball").forEach((ball) => {
+          const s = cases[ball.dataset.name];
+          const dist = ball.parentElement.clientWidth - ball.offsetWidth;
+          ball.style.transition = "none";
+          ball.style.transform = "translateX(0)";
+          void ball.offsetWidth;
+          ball.style.transition = `transform ${s.duration}s ${s.easing}`;
+          ball.style.transform = `translateX(${dist}px)`;
+        });
+      });
+
+      document.getElementById("out").textContent = Object.entries(cases)
+        .map(([n, s]) => `${n}\n  ${s.duration}s  ${s.easing}`)
+        .join("\n\n");
+    </script>
+  </body>
+</html>
