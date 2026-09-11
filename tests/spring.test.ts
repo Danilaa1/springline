@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { spring, presets } from "../src/index.js";
+import { spring, presets, type SpringOptions } from "../src/index.js";
 
 const stopsOf = (easing: string) => easing.slice("linear(".length, -1).split(", ");
 
@@ -114,5 +114,53 @@ describe("presets", () => {
     expect(spring({ ...presets.snappy, mass: 2 }).duration).toBeGreaterThan(
       spring(presets.snappy).duration,
     );
+  });
+});
+
+describe("input validation", () => {
+  it("throws RangeError on non-finite numbers instead of hanging or emitting bad CSS", () => {
+    const bad: SpringOptions[] = [
+      { stiffness: Infinity },
+      { stiffness: NaN },
+      { damping: Infinity },
+      { damping: NaN },
+      { mass: Infinity },
+      { velocity: NaN },
+      { velocity: Infinity },
+      { velocity: -Infinity },
+      { duration: Infinity },
+      { duration: NaN },
+      { duration: 0.5, bounce: NaN },
+      { duration: 0.5, bounce: Infinity },
+      { points: NaN },
+      { points: Infinity },
+    ];
+    for (const opts of bad) {
+      try {
+        spring(opts);
+        expect.unreachable(`${JSON.stringify(opts)} should throw`);
+      } catch (e) {
+        expect(e).toBeInstanceOf(RangeError);
+        expect((e as Error).message).toMatch(/^springline: /);
+      }
+    }
+  });
+});
+
+describe("truncation", () => {
+  it("never stacks stops at at=1 when the spring settles past the duration cap", () => {
+    const s = spring({ stiffness: 180, damping: 2, mass: 1 });
+    expect(s.duration).toBe(2.5);
+    expect(s.stops.at(-1)).toEqual({ at: 1, value: 1 });
+    expect(s.stops.filter((p) => p.at === 1)).toHaveLength(1);
+    for (let i = 1; i < s.stops.length; i++) {
+      expect(s.stops[i].at).toBeGreaterThan(s.stops[i - 1].at);
+    }
+  });
+
+  it("still pins both ends for an extreme duration bounce", () => {
+    const s = spring({ duration: 0.5, bounce: 0.99 });
+    expect(s.stops[0]).toEqual({ at: 0, value: 0 });
+    expect(s.stops.at(-1)).toEqual({ at: 1, value: 1 });
   });
 });

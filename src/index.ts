@@ -51,15 +51,19 @@ function assert(ok: boolean, msg: string) {
 export function spring(options: SpringOptions = {}): SpringResult {
   const velocity = options.velocity ?? 0;
   const points = options.points ?? MAX_POINTS;
-  assert(points >= 2, "points must be at least 2");
+  /* Number.isFinite rejects NaN, ±Infinity and non-numbers; without it an
+     infinite duration hangs simulate() and infinite stiffness emits Infinity
+     into the CSS string, while NaN velocity silently returns linear(0, 1). */
+  assert(Number.isFinite(velocity), "velocity must be finite");
+  assert(Number.isFinite(points) && points >= 2, "points must be at least 2");
 
   let samples;
   let duration;
 
   if ("duration" in options) {
     const bounce = options.bounce ?? 0;
-    assert(options.duration > 0, "duration must be positive");
-    assert(bounce >= 0 && bounce < 1, "bounce must be in [0, 1)");
+    assert(Number.isFinite(options.duration) && options.duration > 0, "duration must be positive");
+    assert(Number.isFinite(bounce) && bounce >= 0 && bounce < 1, "bounce must be in [0, 1)");
     /* damping ratio ζ = 1 − bounce; find how long the reference spring takes, then
        scale stiffness by s² and damping by s so it settles in exactly `duration` */
     const zeta = 1 - bounce;
@@ -70,9 +74,9 @@ export function spring(options: SpringOptions = {}): SpringResult {
     duration = options.duration;
   } else {
     const { stiffness, damping, mass } = { ...DEFAULTS, ...options };
-    assert(stiffness > 0, "stiffness must be positive");
-    assert(damping >= 0, "damping cannot be negative");
-    assert(mass > 0, "mass must be positive");
+    assert(Number.isFinite(stiffness) && stiffness > 0, "stiffness must be positive");
+    assert(Number.isFinite(damping) && damping >= 0, "damping cannot be negative");
+    assert(Number.isFinite(mass) && mass > 0, "mass must be positive");
     samples = simulate(stiffness, damping, mass, velocity);
     duration = Math.min(MAX_DURATION, Math.max(MIN_DURATION, samples.at(-1)!.t));
   }
