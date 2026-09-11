@@ -41,8 +41,15 @@ const DEFAULT_TOL = 0.002;
 const TOL_STEP = 1.15;
 
 export function toStops(samples: Sample[], duration: number, maxPoints: number): Stop[] {
-  const pts: Stop[] = samples.map((s) => ({ at: Math.min(1, s.t / duration), value: s.x }));
-  pts[pts.length - 1] = { at: 1, value: 1 };
+  /* Samples past `duration` (a physical spring settling after MAX_DURATION)
+     would all collapse onto at=1 with different values: a vertical stack plus
+     a jump to the pinned end. Drop them; the played window ends at duration. */
+  const inWindow = samples.filter((s) => s.t <= duration);
+  const pts: Stop[] = inWindow.map((s) => ({ at: s.t / duration, value: s.x }));
+  /* A sub-millisecond duration can leave only t=0 in the window; push the
+     pinned end then instead of overwriting the start. */
+  if (pts.length < 2) pts.push({ at: 1, value: 1 });
+  else pts[pts.length - 1] = { at: 1, value: 1 };
   let tol = DEFAULT_TOL;
   let out = simplify(pts, tol);
   while (out.length > maxPoints) {

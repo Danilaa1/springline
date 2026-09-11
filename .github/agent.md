@@ -42,7 +42,7 @@ Result:
 }
 ```
 
-Throws `RangeError` on stiffness ≤ 0, damping < 0, mass ≤ 0, duration ≤ 0, bounce outside [0, 1), points < 2.
+Throws `RangeError` on stiffness ≤ 0, damping < 0, mass ≤ 0, duration ≤ 0, bounce outside [0, 1), points < 2. Every numeric input must be finite: `NaN` and `±Infinity` throw (an infinite duration would hang the simulation, infinite stiffness would emit `Infinity` into the CSS).
 
 ## Presets
 
